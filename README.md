@@ -1,11 +1,8 @@
-# Riots Webthings
-[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+# Riots WebThings
 
-Riots WebThings implementation
+> This repository is in Progress state
 
-
-
-Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for wp6 demos
+Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for WP6 demos
 
 Uses [Python webthing library]([https://github.com/WebThingsIO/webthing-python)
 
