@@ -6,10 +6,17 @@ Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for WP6 demo
 
 Uses [Python webthing library]([https://github.com/WebThingsIO/webthing-python)
 
-Running:
+Running in Docker:
 ```bash
 docker build --pull -t test . && docker run --rm -it test
 ```
+
+
+Running in Python:
+```python
+python3 ./src/riots-webthings.py
+```
+
 
 ## Acknowledgements
 
