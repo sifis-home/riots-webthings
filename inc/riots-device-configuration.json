@@ -1,0 +1,32 @@
+
+{
+  "id": "32661",
+  "address": "b84eaf5c",
+  "key": "cca291135ec775d4e13f4b7e931b93b4",
+  "title": "Riots Thermostat",
+  "description": "A web connected Thermostat",
+  "properties": {
+    "on": {
+      "id": "241081",
+      "title": "Heating",
+      "type": "boolean",
+      "readOnly": true,
+      "description": "Tells if heating is turned on"
+    },
+    "temperature": {
+      "id": "241074",
+      "title": "Temperature",
+      "type": "number",
+      "unit": "degree celsius",
+      "readOnly": true,
+      "description": "An ambient temperature sensor"
+    },
+    "set_temperature": {
+      "id": "241085",
+      "title": "Set temperature",
+      "type": "number",
+      "unit": "degree celsius",
+      "description": "User given set temperature"
+    }
+  }
+}
