@@ -1,6 +1,10 @@
 # Riots WebThings
 
-> This repository is in Progress state
+This repository provides implementation of two simulated Riots Thermostats
+
+Thermostats change measured temperature (and heating status) in random intervals approx once in every three seconds
+
+----
 
 Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for WP6 demos
 
