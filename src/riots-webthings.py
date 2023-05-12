@@ -1,106 +1,109 @@
 from __future__ import division
-from webthing import (Action, Event, Property, SingleThing, Thing, Value,
-                      WebThingServer)
+from webthing import (Property, MultipleThings, Thing, Value, WebThingServer)
 import logging
 import time
 import uuid
 
-
-class OverheatedEvent(Event):
-
-    def __init__(self, thing, data):
-        Event.__init__(self, thing, 'overheated', data=data)
+import random
+import tornado.ioloop
 
 
-class FadeAction(Action):
+class SimulatedRiotsThermostat(Thing):
+    """A thermostat which updates its status and measurement in every few seconds."""
 
-    def __init__(self, thing, input_):
-        Action.__init__(self, uuid.uuid4().hex, thing, 'fade', input_=input_)
+    def __init__(self, name, id):
+        devid = 'urn:dev:ops:riots-device-' , id
+        self.name = name
 
-    def perform_action(self):
-        time.sleep(self.input['duration'] / 1000)
-        self.thing.set_property('brightness', self.input['brightness'])
-        self.thing.add_event(OverheatedEvent(self.thing, 102))
+        Thing.__init__(
+            self,
+            devid,
+            name,
+            ['Thermostat'],
+            'Riots web connected thermostat'
+        )
+
+        self.status = Value("off")
+        self.add_property(
+            Property(self,
+                'HeatingCoolingProperty',
+                self.status,
+                metadata={
+                    '@type': 'HeatingCoolingProperty',
+                    'title': 'Heating status',
+                    'type': 'string',                
+                    'enum': ["off", "heating"],
+                    'description': 'The status of heating',
+                    'readOnly': True,
+                }))
+
+        self.temperature = Value(24.8)
+        self.add_property(
+            Property(self,
+                'TemperatureProperty',
+                self.temperature,
+                metadata={
+                    '@type': 'TemperatureProperty',
+                    'title': 'Measured temperature',
+                    'type': 'number',
+                    'description': 'The current temperature in C',
+                    'minimum': -20,
+                    'maximum': 30,
+                    'unit': 'degree celsius',
+                    'readOnly': True,
+                }))
+
+        self.target_temperature = Value(21, lambda v: logging.info('%s temperature setpoint is now %s', self.name, v))
+
+        self.add_property(
+            Property(self,
+                'TargetTemperatureProperty',
+                self.target_temperature,
+                metadata={
+                    '@type': 'TargetTemperatureProperty',
+                    'title': 'Set temperature',
+                    'type': 'number',
+                    'description': 'Target temperature 15-25',
+                    'minimum': 15,
+                    'maximum': 25,
+                    'unit': 'degree celsius',
+                }))
+
+        self.timer = tornado.ioloop.PeriodicCallback(
+            self.update_values,
+            3000,
+            0.5
+        )
+        self.timer.start()
+
+    def update_values(self):
+        new_temp = self.read_from_gpio()
+        self.temperature.notify_of_external_update(new_temp)
+
+        if new_temp > self.target_temperature.get():
+          self.status.notify_of_external_update("off")
+
+        else:
+          self.status.notify_of_external_update("heating")
+
+        logging.info('Update %s to %s (setpoint %s => %s)', self.name, new_temp, self.target_temperature.get(), self.status.get())
 
 
-def make_thing():
-    thing = Thing(
-        'urn:dev:ops:my-lamp-1234',
-        'My Lamp',
-        ['OnOffSwitch', 'Light'],
-        'A web connected lamp'
-    )
+    def cancel_update_level_task(self):
+        self.timer.stop()
 
-    thing.add_property(
-        Property(thing,
-                 'on',
-                 Value(True),
-                 metadata={
-                     '@type': 'OnOffProperty',
-                     'title': 'On/Off',
-                     'type': 'boolean',
-                     'description': 'Whether the lamp is turned on',
-                 }))
-    thing.add_property(
-        Property(thing,
-                 'brightness',
-                 Value(50),
-                 metadata={
-                     '@type': 'BrightnessProperty',
-                     'title': 'Brightness',
-                     'type': 'integer',
-                     'description': 'The level of light from 0-100',
-                     'minimum': 0,
-                     'maximum': 100,
-                     'unit': 'percent',
-                 }))
-
-    thing.add_available_action(
-        'fade',
-        {
-            'title': 'Fade',
-            'description': 'Fade the lamp to a given level',
-            'input': {
-                'type': 'object',
-                'required': [
-                    'brightness',
-                    'duration',
-                ],
-                'properties': {
-                    'brightness': {
-                        'type': 'integer',
-                        'minimum': 0,
-                        'maximum': 100,
-                        'unit': 'percent',
-                    },
-                    'duration': {
-                        'type': 'integer',
-                        'minimum': 1,
-                        'unit': 'milliseconds',
-                    },
-                },
-            },
-        },
-        FadeAction)
-
-    thing.add_available_event(
-        'overheated',
-        {
-            'description':
-            'The lamp has exceeded its safe operating temperature',
-            'type': 'number',
-            'unit': 'degree celsius',
-        })
-
-    return thing
+    @staticmethod
+    def read_from_gpio():
+        return 18 + round(6.0 * random.random(), 1)
 
 
 def run_server():
-    thing = make_thing()
 
-    # If adding more than one thing, use MultipleThings() with a name.
-    # In the single thing case, the thing's name will be broadcast.
-    server = WebThingServer(SingleThing(thing), port=8888)
+    thermostat1 = SimulatedRiotsThermostat("First thermostat", "1234")
+    thermostat2 = SimulatedRiotsThermostat("Second thermosta", "5678")
+
+    server = WebThingServer(MultipleThings([thermostat1, thermostat2], 'MultipleThermostats'), port=8888)
+
     try:
         logging.info('starting the server')
         server.start()
