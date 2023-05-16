@@ -100,7 +100,7 @@ class SimulatedRiotsThermostat(Thing):
 def run_server():
 
     thermostat1 = SimulatedRiotsThermostat("First thermostat", "1234")
-    thermostat2 = SimulatedRiotsThermostat("Second thermosta", "5678")
+    thermostat2 = SimulatedRiotsThermostat("Second thermostat", "5678")
 
     server = WebThingServer(MultipleThings([thermostat1, thermostat2], 'MultipleThermostats'), port=8888)
 
