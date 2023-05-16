@@ -1,0 +1,27 @@
+name: riots-webthings-actions
+
+on:
+  push:
+    branches: [ "master"]
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Perform cross compilation
+      run: |
+        docker build --pull -t test .
+    - name: Login to GitHub container registry (ghcr.io)
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        push: true
+        tags: ghcr.io/sifis-home/sifis-home/riots-webthings:latest
