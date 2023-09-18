@@ -7,102 +7,127 @@ import uuid
 import random
 import tornado.ioloop
 
-
-class SimulatedRiotsThermostat(Thing):
-    """A thermostat which updates its status and measurement in every few seconds."""
-
-    def __init__(self, name, id):
-        devid = 'urn:dev:ops:riots-device-' , id
-        self.name = name
-
-        Thing.__init__(
-            self,
-            devid,
-            name,
-            ['Thermostat'],
-            'Riots web connected thermostat'
-        )
-
-        self.status = Value("off")
-        self.add_property(
-            Property(self,
-                'HeatingCoolingProperty',
-                self.status,
-                metadata={
-                    '@type': 'HeatingCoolingProperty',
-                    'title': 'Heating status',
-                    'type': 'string',                
-                    'enum': ["off", "heating"],
-                    'description': 'The status of heating',
-                    'readOnly': True,
-                }))
-
-        self.temperature = Value(24.8)
-        self.add_property(
-            Property(self,
-                'TemperatureProperty',
-                self.temperature,
-                metadata={
-                    '@type': 'TemperatureProperty',
-                    'title': 'Measured temperature',
-                    'type': 'number',
-                    'description': 'The current temperature in C',
-                    'minimum': -20,
-                    'maximum': 30,
-                    'unit': 'degree celsius',
-                    'readOnly': True,
-                }))
-
-        self.target_temperature = Value(21, lambda v: logging.info('%s temperature setpoint is now %s', self.name, v))
-
-        self.add_property(
-            Property(self,
-                'TargetTemperatureProperty',
-                self.target_temperature,
-                metadata={
-                    '@type': 'TargetTemperatureProperty',
-                    'title': 'Set temperature',
-                    'type': 'number',
-                    'description': 'Target temperature 15-25',
-                    'minimum': 15,
-                    'maximum': 25,
-                    'unit': 'degree celsius',
-                }))
-
-        self.timer = tornado.ioloop.PeriodicCallback(
-            self.update_values,
-            3000,
-            0.5
-        )
-        self.timer.start()
-
-    def update_values(self):
-        new_temp = self.read_from_gpio()
-        self.temperature.notify_of_external_update(new_temp)
-
-        if new_temp > self.target_temperature.get():
-          self.status.notify_of_external_update("off")
-
-        else:
-          self.status.notify_of_external_update("heating")
-
-        logging.info('Update %s to %s (setpoint %s => %s)', self.name, new_temp, self.target_temperature.get(), self.status.get())
+from twisted.internet import asyncioreactor
+import tornado.platform.twisted
+import websocket
+import threading
+import json
 
 
-    def cancel_update_level_task(self):
-        self.timer.stop()
+thermostats = []
 
-    @staticmethod
-    def read_from_gpio():
-        return 18 + round(6.0 * random.random(), 1)
+"""A thermostat which updates its status and measurement in every few seconds."""
+class RiotsThermostat(Thing):
+
+    def __init__(self, ws_inst, data, index):
+        devid = 'urn:dev:ops:riots-device-' , data["id"]
+        self.id = data["id"]
+        self.name = data["title"]
+        self.ws = ws_inst
+        self.index = index
+        self.HeatingCoolingProperty = ""
+        self.TemperatureProperty = ""
+        self.HumidityProperty = ""
+        self.TargetTemperatureProperty = ""
+
+        Thing.__init__(self, devid, data["title"], ['Thermostat'], data["description"])
+
+        for the_property in data["properties"]:
+            value_property = ""
+            if(data["properties"][the_property]["propertyType"] == "HeatingCoolingProperty"):
+                self.HeatingCoolingProperty = Value([data["properties"][the_property]["value"]])
+                value_property = self.HeatingCoolingProperty
+            elif(data["properties"][the_property]["propertyType"] == "TemperatureProperty"):
+                self.TemperatureProperty = Value(data["properties"][the_property]["value"])
+                value_property = self.TemperatureProperty
+            elif(data["properties"][the_property]["propertyType"] == "HumidityProperty"):
+                self.HumidityProperty = Value(data["properties"][the_property]["value"])
+                value_property = self.HumidityProperty
+            elif(data["properties"][the_property]["propertyType"] == "TargetTemperatureProperty"):
+                self.TargetTemperatureProperty = Value(data["properties"][the_property]["value"], self.update_target_temperature)
+                value_property = self.TargetTemperatureProperty
+
+            the_metadata={
+                '@type': str(data["properties"][the_property]["propertyType"]),
+                'title': str(data["properties"][the_property]["title"]),
+                'type': str(data["properties"][the_property]["type"]),
+                'description': str(data["properties"][the_property]["description"]),
+                'unit': str(data["properties"][the_property]["unit"])
+            }
+            if "enum" in data["properties"][the_property]:
+                the_metadata['enum'] = (data["properties"][the_property]["enum"])
+
+            if "readOnly" in data["properties"][the_property]:
+                the_metadata['readOnly'] = True
+
+            self.add_property(
+                Property(self,
+                    data["properties"][the_property]['propertyType'],
+                    value_property,
+                    the_metadata
+                )
+            )
+
+    def update_target_temperature(self, value):
+        # print("Update_target_temperature ", self.name, " - Got ", value)
+        sendData = {}
+        sendData['thermostat'] = self.index
+        sendData['propertyType'] = "TargetTemperatureProperty"
+        sendData['value'] = str(value)
+        self.ws.send(json.dumps(sendData))
+
+
+
+class RiotsWebSocketClient:
+    global thermostats
+    def create(self):
+      self.ws = websocket.WebSocketApp("ws://localhost:8942", on_open=self.on_open, on_close=self.on_close, on_data=self.on_data) # on_error=self.on_error, 
+      self.wst = threading.Thread(target=lambda: self.ws.run_forever())
+      self.wst.daemon = True
+      self.wst.start()
+      return self.ws
+
+    # def on_error(self, ws, error):
+    #     print("### Riots on_error" , error, " ###")
+
+    def on_close(self, ws, close_status_code, close_msg):
+        print("### Riots Connection closed ###")
+
+    def on_open(self, ws):
+        print("### Riots Connection established ###")
+
+    def on_data(self, ws, recv_str, recv_type, recv_cont):
+        # print("# On Data ", recv_str)
+        obj = json.loads(recv_str)
+        t_id = obj["thermostat"]
+        t_prop = obj["propertyType"]
+        t_data = obj["value"]
+
+        # if(t_prop == "HeatingCoolingProperty") or t_prop == "TemperatureProperty" or t_prop == "HumidityProperty" or t_prop == "TargetTemperatureProperty":
+        #    thermostats[t_id].set_property(t_prop, t_data)
+        if(t_prop == "HeatingCoolingProperty"):
+            thermostats[t_id].HeatingCoolingProperty.notify_of_external_update(t_data)
+        elif(t_prop == "TemperatureProperty"):
+            thermostats[t_id].TemperatureProperty.notify_of_external_update(t_data)
+        elif(t_prop == "HumidityProperty"):
+            thermostats[t_id].HumidityProperty.notify_of_external_update(t_data)
+        elif(t_prop == "TargetTemperatureProperty"):
+            thermostats[t_id].TargetTemperatureProperty.notify_of_external_update(t_data)
 
 
 def run_server():
 
-    thermostat1 = SimulatedRiotsThermostat("First thermostat", "1234")
-    thermostat2 = SimulatedRiotsThermostat("Second thermostat", "5678")
+    ws_client = RiotsWebSocketClient()
+    ws_inst = ws_client.create()
 
-    server = WebThingServer(MultipleThings([thermostat1, thermostat2], 'MultipleThermostats'), port=8888)
+    f = open('inc/riots-device-configuration.json')
+    configuration_data = json.load(f)
+    for idx, thermostat_data in enumerate(configuration_data):
+      thermostat = RiotsThermostat(ws_inst, thermostat_data, idx)
+      thermostats.append(thermostat)
+    f.close()
+
+    server = WebThingServer(MultipleThings(thermostats, 'MultipleThermostats'), port=8888)
 
     try:
         logging.info('starting the server')

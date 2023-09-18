@@ -1,32 +1,57 @@
-
-{
-  "id": "32661",
-  "address": "b84eaf5c",
-  "key": "cca291135ec775d4e13f4b7e931b93b4",
-  "title": "Riots Thermostat",
-  "description": "A web connected Thermostat",
-  "properties": {
-    "on": {
-      "id": "241081",
-      "title": "Heating",
-      "type": "boolean",
-      "readOnly": true,
-      "description": "Tells if heating is turned on"
-    },
-    "temperature": {
-      "id": "241074",
-      "title": "Temperature",
-      "type": "number",
-      "unit": "degree celsius",
-      "readOnly": true,
-      "description": "An ambient temperature sensor"
-    },
-    "set_temperature": {
-      "id": "241085",
-      "title": "Set temperature",
-      "type": "number",
-      "unit": "degree celsius",
-      "description": "User given set temperature"
+[
+  {
+    "id": "929",
+    "address": "48aa92db",
+    "key": "15388ee41bf5d126ba8f67e7227448cc",
+    "title": "Riots Thermostat 1 (True Word)",
+    "description": "A web connected Thermostat",
+    "properties": {
+      "set_temperature": {
+        "id": "0",
+        "propertyType": "TargetTemperatureProperty",
+        "title": "Set temperature",
+        "type": "number",
+        "value": 21,
+        "unit": "degree celsius",
+        "minimum": 15,
+        "maximum": 30,
+        "description": "Target temperature 15-30"
+      },
+      "temperature": {
+        "id": "1",
+        "propertyType": "TemperatureProperty",
+        "title": "Measured temperature",
+        "type": "number",
+        "value": 22,
+        "unit": "degree celsius",
+        "minimum": -20,
+        "maximum": 30,
+        "readOnly": true,
+        "description": "The current temperature in Celsius degrees"
+      },
+      "humidity": {
+        "id": "2",
+        "propertyType": "HumidityProperty",
+        "title": "Measured humidity",
+        "type": "number",
+        "value": 30,
+        "unit": "percent",
+        "minimum": 0,
+        "maximum": 100,
+        "readOnly": true,
+        "description": "The current humidity in %"
+      },
+      "status": {
+        "id": "7",
+        "propertyType": "HeatingCoolingProperty",
+        "title": "Heating status",
+        "type": "string",
+        "enum": ["off", "heating"],
+        "value": "off",
+        "unit": "",
+        "readOnly": true,
+        "description": "The status of heating"
+      }
     }
   }
-}
+]

@@ -1,12 +1,12 @@
 # Riots WebThings
 
-This repository provides implementation of two simulated Riots Thermostats
+This repository provides implementation that connects Riots Thermostats to SIFIS-Home architecture.
 
-Thermostats change measured temperature (and heating status) in random intervals approx once in every three seconds
+Thermostats are implemented as Web of Things complient devices.
 
 ----
 
-Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for WP6 demos
+Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for SIFIS-Home WP6
 
 Uses [Python webthing library]([https://github.com/WebThingsIO/webthing-python)
 

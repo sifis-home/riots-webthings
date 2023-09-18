@@ -3,3 +3,6 @@ twisted
 pycryptodome
 tornado
 pyserial
+asyncio
+autobahn
+websockets
