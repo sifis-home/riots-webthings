@@ -20,7 +20,7 @@ thermostats = []
 class RiotsThermostat(Thing):
 
     def __init__(self, ws_inst, data, index):
-        devid = 'urn:dev:ops:riots-device-' , data["id"]
+        devid = 'urn:dev:ops:riots-device-' + data["id"]
         self.id = data["id"]
         self.name = data["title"]
         self.ws = ws_inst

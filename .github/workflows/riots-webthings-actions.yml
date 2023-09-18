@@ -31,3 +31,10 @@ jobs:
         file: Dockerfile.webthings
         push: true
         tags: ghcr.io/sifis-home/sifis-home/riots-webthings:latest
+
+    - name: Build and push Riots DHT
+      uses: docker/build-push-action@v4
+      with:
+        file: Dockerfile.dht
+        push: true
+        tags: ghcr.io/sifis-home/sifis-home/riots-dht:latest
