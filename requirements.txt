@@ -6,3 +6,4 @@ pyserial
 asyncio
 autobahn
 websockets
+websocket
