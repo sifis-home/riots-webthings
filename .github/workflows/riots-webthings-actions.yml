@@ -17,8 +17,17 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build and push
+
+    - name: Build and push Riots Usb
+      uses: docker/build-push-action@v4
+      with:        
+        file: Dockerfile.usb
+        push: true
+        tags: ghcr.io/sifis-home/sifis-home/riots-usb:latest
+
+    - name: Build and push Riots Webthings
       uses: docker/build-push-action@v4
       with:
+        file: Dockerfile.webthings
         push: true
         tags: ghcr.io/sifis-home/sifis-home/riots-webthings:latest

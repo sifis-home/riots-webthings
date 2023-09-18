@@ -1,0 +1,12 @@
+version: '2.2'
+
+services:
+
+  riots-usb:
+    image: ghcr.io/sifis-home/sifis-home/riots-usb:latest
+    ports:
+      - 8942:8942
+
+  riots-webthings:
+    image: ghcr.io/sifis-home/sifis-home/riots-webthings:latest
+    network_mode: "host"
