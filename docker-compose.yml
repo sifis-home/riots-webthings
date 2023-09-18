@@ -6,7 +6,15 @@ services:
     image: ghcr.io/sifis-home/sifis-home/riots-usb:latest
     ports:
       - 8942:8942
+    privileged: true
+    environment:
+      - UDEV=1
+    devices:
+      - '/dev:/dev'
 
   riots-webthings:
     image: ghcr.io/sifis-home/sifis-home/riots-webthings:latest
     network_mode: "host"
+    # depends_on:
+    #   riots-usb:
+    #     condition: service_healthy
