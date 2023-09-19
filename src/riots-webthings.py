@@ -139,6 +139,7 @@ def run_server():
 
 
 if __name__ == '__main__':
+    time.sleep(8) # Give Riots USB some time to start
     logging.basicConfig(
         level=10,
         format="%(asctime)s %(filename)s:%(lineno)s %(levelname)s %(message)s"
