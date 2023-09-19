@@ -27,7 +27,7 @@ def update_thermostat():
         propv = 1
     values[propn] = propv
   
-
+  values["name"] = "Riots Thermostat 1"
   api_url = "https://yggio.sifis-home.eu:3000/dht-insecure/"
 
   topic_name = "SIFIS::RiotsThermostat"
