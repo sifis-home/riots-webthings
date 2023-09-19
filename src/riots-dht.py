@@ -37,8 +37,8 @@ def update_thermostat():
 
 while True:
   try:
-    update_thermostat()
     time.sleep(10)
+    update_thermostat()
   except:
     print("An exception occurred")
 
