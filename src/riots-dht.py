@@ -39,6 +39,6 @@ while True:
   try:
     time.sleep(10)
     update_thermostat()
-  except:
-    print("An exception occurred")
+  except ConnectionError:
+    print("ConnectionError occurred")
 
