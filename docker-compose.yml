@@ -18,3 +18,4 @@ services:
 
   riots-dht:
     image: ghcr.io/sifis-home/sifis-home/riots-dht:latest
+    network_mode: "host"
