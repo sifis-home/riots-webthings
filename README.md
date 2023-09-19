@@ -8,17 +8,21 @@ Thermostats are implemented as Web of Things complient devices.
 
 Riots implementation of [Web of Things](https://www.w3.org/WoT/wg/) for SIFIS-Home WP6
 
-Uses [Python webthing library]([https://github.com/WebThingsIO/webthing-python)
+The implementation uses [Python webthing library]([https://github.com/WebThingsIO/webthing-python)
 
-Running in Docker:
+
+The project can be run using docker-compose
 ```bash
-docker build --pull -t test . && docker run --rm -it test
+docker-compose up
 ```
 
 
 Running in Python:
 ```python
+pip3 install -r requirements.txt
+python3 ./src/riots-usb.py
 python3 ./src/riots-webthings.py
+python3 ./src/riots-dht.py
 ```
 
 
